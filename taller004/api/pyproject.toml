@@ -1,0 +1,19 @@
+[project]
+name = "taller004-api"
+version = "0.1.0"
+description = "API de inferencia que carga el modelo registrado en MLflow"
+requires-python = "==3.11.*"
+# Mismas versiones que jupyter/pyproject.toml: el modelo se serializa con
+# scikit-learn en Jupyter y se deserializa aqui; si difieren, puede fallar al cargar.
+dependencies = [
+    "fastapi==0.142.2",
+    "uvicorn==0.54.0",
+    "mlflow==3.16.1",
+    "scikit-learn==1.9.1",
+    "pandas==3.0.6",
+    "numpy==2.4.6",
+    "psutil==7.2.2",
+]
+
+[tool.uv]
+package = false

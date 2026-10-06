@@ -1,0 +1,24 @@
+[2026-09-20T22:17:35.688+0000] {taskinstance.py:1125} INFO - Dependencies all met for dep_context=non-requeueable deps ti=<TaskInstance: 4-dependencies.tarea2 manual__2026-09-20T22:17:33.539700+00:00 [queued]>
+[2026-09-20T22:17:35.707+0000] {taskinstance.py:1125} INFO - Dependencies all met for dep_context=requeueable deps ti=<TaskInstance: 4-dependencies.tarea2 manual__2026-09-20T22:17:33.539700+00:00 [queued]>
+[2026-09-20T22:17:35.708+0000] {taskinstance.py:1331} INFO - Starting attempt 1 of 1
+[2026-09-20T22:17:35.732+0000] {taskinstance.py:1350} INFO - Executing <Task(BashOperator): tarea2> on 2026-09-20 22:17:33.539700+00:00
+[2026-09-20T22:17:35.741+0000] {standard_task_runner.py:57} INFO - Started process 5413 to run task
+[2026-09-20T22:17:35.748+0000] {standard_task_runner.py:84} INFO - Running: ['***', 'tasks', 'run', '4-dependencies', 'tarea2', 'manual__2026-09-20T22:17:33.539700+00:00', '--job-id', '1675', '--raw', '--subdir', 'DAGS_FOLDER/4_dependencies.py', '--cfg-path', '/tmp/tmp0826c4ix']
+[2026-09-20T22:17:35.749+0000] {standard_task_runner.py:85} INFO - Job 1675: Subtask tarea2
+[2026-09-20T22:17:35.849+0000] {task_command.py:410} INFO - Running <TaskInstance: 4-dependencies.tarea2 manual__2026-09-20T22:17:33.539700+00:00 [running]> on host f248220f3539
+[2026-09-20T22:17:36.059+0000] {taskinstance.py:1570} INFO - Exporting env vars: AIRFLOW_CTX_DAG_OWNER='***' AIRFLOW_CTX_DAG_ID='4-dependencies' AIRFLOW_CTX_TASK_ID='tarea2' AIRFLOW_CTX_EXECUTION_DATE='2026-09-20T22:17:33.539700+00:00' AIRFLOW_CTX_TRY_NUMBER='1' AIRFLOW_CTX_DAG_RUN_ID='manual__2026-09-20T22:17:33.539700+00:00'
+[2026-09-20T22:17:36.061+0000] {subprocess.py:63} INFO - Tmp dir root location: 
+ /tmp
+[2026-09-20T22:17:36.062+0000] {subprocess.py:75} INFO - Running command: ['/bin/bash', '-c', "'echo 'tarea2"]
+[2026-09-20T22:17:36.081+0000] {subprocess.py:86} INFO - Output:
+[2026-09-20T22:17:36.086+0000] {subprocess.py:93} INFO - /bin/bash: line 1: echo tarea2: command not found
+[2026-09-20T22:17:36.087+0000] {subprocess.py:97} INFO - Command exited with return code 127
+[2026-09-20T22:17:36.107+0000] {taskinstance.py:1847} ERROR - Task failed with exception
+Traceback (most recent call last):
+  File "/home/airflow/.local/lib/python3.7/site-packages/airflow/operators/bash.py", line 211, in execute
+    f"Bash command failed. The command returned a non-zero exit code {result.exit_code}."
+airflow.exceptions.AirflowException: Bash command failed. The command returned a non-zero exit code 127.
+[2026-09-20T22:17:36.113+0000] {taskinstance.py:1373} INFO - Marking task as FAILED. dag_id=4-dependencies, task_id=tarea2, execution_date=20260920T221733, start_date=20260920T221735, end_date=20260920T221736
+[2026-09-20T22:17:36.135+0000] {standard_task_runner.py:109} ERROR - Failed to execute job 1675 for task tarea2 (Bash command failed. The command returned a non-zero exit code 127.; 5413)
+[2026-09-20T22:17:36.161+0000] {local_task_job_runner.py:232} INFO - Task exited with return code 1
+[2026-09-20T22:17:36.208+0000] {taskinstance.py:2674} INFO - 0 downstream tasks scheduled from follow-on schedule check

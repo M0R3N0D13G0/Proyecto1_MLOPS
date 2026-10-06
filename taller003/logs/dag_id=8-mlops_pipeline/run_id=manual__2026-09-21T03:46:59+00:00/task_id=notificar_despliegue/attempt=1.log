@@ -1,0 +1,18 @@
+[2026-09-21T03:47:10.697+0000] {taskinstance.py:1125} INFO - Dependencies all met for dep_context=non-requeueable deps ti=<TaskInstance: 8-mlops_pipeline.notificar_despliegue manual__2026-09-21T03:46:59+00:00 [queued]>
+[2026-09-21T03:47:10.721+0000] {taskinstance.py:1125} INFO - Dependencies all met for dep_context=requeueable deps ti=<TaskInstance: 8-mlops_pipeline.notificar_despliegue manual__2026-09-21T03:46:59+00:00 [queued]>
+[2026-09-21T03:47:10.721+0000] {taskinstance.py:1331} INFO - Starting attempt 1 of 2
+[2026-09-21T03:47:10.747+0000] {taskinstance.py:1350} INFO - Executing <Task(BashOperator): notificar_despliegue> on 2026-09-21 03:46:59+00:00
+[2026-09-21T03:47:10.760+0000] {standard_task_runner.py:57} INFO - Started process 919 to run task
+[2026-09-21T03:47:10.771+0000] {standard_task_runner.py:84} INFO - Running: ['***', 'tasks', 'run', '8-mlops_pipeline', 'notificar_despliegue', 'manual__2026-09-21T03:46:59+00:00', '--job-id', '4413', '--raw', '--subdir', 'DAGS_FOLDER/8_mlops_pipeline.py', '--cfg-path', '/tmp/tmpp6slu5jr']
+[2026-09-21T03:47:10.772+0000] {standard_task_runner.py:85} INFO - Job 4413: Subtask notificar_despliegue
+[2026-09-21T03:47:10.864+0000] {task_command.py:410} INFO - Running <TaskInstance: 8-mlops_pipeline.notificar_despliegue manual__2026-09-21T03:46:59+00:00 [running]> on host 07ebe77922f8
+[2026-09-21T03:47:11.013+0000] {taskinstance.py:1570} INFO - Exporting env vars: AIRFLOW_CTX_DAG_OWNER='***' AIRFLOW_CTX_DAG_ID='8-mlops_pipeline' AIRFLOW_CTX_TASK_ID='notificar_despliegue' AIRFLOW_CTX_EXECUTION_DATE='2026-09-21T03:46:59+00:00' AIRFLOW_CTX_TRY_NUMBER='1' AIRFLOW_CTX_DAG_RUN_ID='manual__2026-09-21T03:46:59+00:00'
+[2026-09-21T03:47:11.014+0000] {subprocess.py:63} INFO - Tmp dir root location: 
+ /tmp
+[2026-09-21T03:47:11.015+0000] {subprocess.py:75} INFO - Running command: ['/bin/bash', '-c', "echo 'Pipeline de MLOps ejecutado exitosamente. Modelo listo para inferencia.'"]
+[2026-09-21T03:47:11.044+0000] {subprocess.py:86} INFO - Output:
+[2026-09-21T03:47:11.051+0000] {subprocess.py:93} INFO - Pipeline de MLOps ejecutado exitosamente. Modelo listo para inferencia.
+[2026-09-21T03:47:11.052+0000] {subprocess.py:97} INFO - Command exited with return code 0
+[2026-09-21T03:47:11.100+0000] {taskinstance.py:1373} INFO - Marking task as SUCCESS. dag_id=8-mlops_pipeline, task_id=notificar_despliegue, execution_date=20260921T034659, start_date=20260921T034710, end_date=20260921T034711
+[2026-09-21T03:47:11.143+0000] {local_task_job_runner.py:232} INFO - Task exited with return code 0
+[2026-09-21T03:47:11.502+0000] {taskinstance.py:2674} INFO - 0 downstream tasks scheduled from follow-on schedule check

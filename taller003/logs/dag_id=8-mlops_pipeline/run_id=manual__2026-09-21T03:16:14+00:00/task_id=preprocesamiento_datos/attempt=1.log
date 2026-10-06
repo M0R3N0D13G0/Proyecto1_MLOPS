@@ -1,0 +1,15 @@
+[2026-09-21T03:16:18.138+0000] {taskinstance.py:1125} INFO - Dependencies all met for dep_context=non-requeueable deps ti=<TaskInstance: 8-mlops_pipeline.preprocesamiento_datos manual__2026-09-21T03:16:14+00:00 [queued]>
+[2026-09-21T03:16:18.157+0000] {taskinstance.py:1125} INFO - Dependencies all met for dep_context=requeueable deps ti=<TaskInstance: 8-mlops_pipeline.preprocesamiento_datos manual__2026-09-21T03:16:14+00:00 [queued]>
+[2026-09-21T03:16:18.158+0000] {taskinstance.py:1331} INFO - Starting attempt 1 of 2
+[2026-09-21T03:16:18.187+0000] {taskinstance.py:1350} INFO - Executing <Task(PythonOperator): preprocesamiento_datos> on 2026-09-21 03:16:14+00:00
+[2026-09-21T03:16:18.198+0000] {standard_task_runner.py:57} INFO - Started process 651 to run task
+[2026-09-21T03:16:18.210+0000] {standard_task_runner.py:84} INFO - Running: ['***', 'tasks', 'run', '8-mlops_pipeline', 'preprocesamiento_datos', 'manual__2026-09-21T03:16:14+00:00', '--job-id', '4400', '--raw', '--subdir', 'DAGS_FOLDER/8_mlops_pipeline.py', '--cfg-path', '/tmp/tmpxigvwdu3']
+[2026-09-21T03:16:18.211+0000] {standard_task_runner.py:85} INFO - Job 4400: Subtask preprocesamiento_datos
+[2026-09-21T03:16:18.305+0000] {task_command.py:410} INFO - Running <TaskInstance: 8-mlops_pipeline.preprocesamiento_datos manual__2026-09-21T03:16:14+00:00 [running]> on host 07ebe77922f8
+[2026-09-21T03:16:18.819+0000] {taskinstance.py:1570} INFO - Exporting env vars: AIRFLOW_CTX_DAG_OWNER='***' AIRFLOW_CTX_DAG_ID='8-mlops_pipeline' AIRFLOW_CTX_TASK_ID='preprocesamiento_datos' AIRFLOW_CTX_EXECUTION_DATE='2026-09-21T03:16:14+00:00' AIRFLOW_CTX_TRY_NUMBER='1' AIRFLOW_CTX_DAG_RUN_ID='manual__2026-09-21T03:16:14+00:00'
+[2026-09-21T03:16:18.820+0000] {logging_mixin.py:149} INFO - Realizando Normalización y One-Hot Encoding...
+[2026-09-21T03:16:18.820+0000] {logging_mixin.py:149} INFO - División Train/Test realizada con éxito.
+[2026-09-21T03:16:18.820+0000] {python.py:183} INFO - Done. Returned value was: None
+[2026-09-21T03:16:18.848+0000] {taskinstance.py:1373} INFO - Marking task as SUCCESS. dag_id=8-mlops_pipeline, task_id=preprocesamiento_datos, execution_date=20260921T031614, start_date=20260921T031618, end_date=20260921T031618
+[2026-09-21T03:16:18.940+0000] {local_task_job_runner.py:232} INFO - Task exited with return code 0
+[2026-09-21T03:16:19.314+0000] {taskinstance.py:2674} INFO - 1 downstream tasks scheduled from follow-on schedule check

@@ -1,0 +1,18 @@
+[2026-09-21T01:31:16.691+0000] {taskinstance.py:1125} INFO - Dependencies all met for dep_context=non-requeueable deps ti=<TaskInstance: 6-XCom.tarea_1 scheduled__2025-11-06T00:00:00+00:00 [queued]>
+[2026-09-21T01:31:16.734+0000] {taskinstance.py:1125} INFO - Dependencies all met for dep_context=requeueable deps ti=<TaskInstance: 6-XCom.tarea_1 scheduled__2025-11-06T00:00:00+00:00 [queued]>
+[2026-09-21T01:31:16.735+0000] {taskinstance.py:1331} INFO - Starting attempt 1 of 1
+[2026-09-21T01:31:16.773+0000] {taskinstance.py:1350} INFO - Executing <Task(BashOperator): tarea_1> on 2025-11-06 00:00:00+00:00
+[2026-09-21T01:31:16.789+0000] {standard_task_runner.py:57} INFO - Started process 15376 to run task
+[2026-09-21T01:31:16.796+0000] {standard_task_runner.py:84} INFO - Running: ['***', 'tasks', 'run', '6-XCom', 'tarea_1', 'scheduled__2025-11-06T00:00:00+00:00', '--job-id', '4256', '--raw', '--subdir', 'DAGS_FOLDER/6_xcoms.py', '--cfg-path', '/tmp/tmp7_7ypfmz']
+[2026-09-21T01:31:16.797+0000] {standard_task_runner.py:85} INFO - Job 4256: Subtask tarea_1
+[2026-09-21T01:31:16.907+0000] {task_command.py:410} INFO - Running <TaskInstance: 6-XCom.tarea_1 scheduled__2025-11-06T00:00:00+00:00 [running]> on host f248220f3539
+[2026-09-21T01:31:17.097+0000] {taskinstance.py:1570} INFO - Exporting env vars: AIRFLOW_CTX_DAG_OWNER='***' AIRFLOW_CTX_DAG_ID='6-XCom' AIRFLOW_CTX_TASK_ID='tarea_1' AIRFLOW_CTX_EXECUTION_DATE='2025-11-06T00:00:00+00:00' AIRFLOW_CTX_TRY_NUMBER='1' AIRFLOW_CTX_DAG_RUN_ID='scheduled__2025-11-06T00:00:00+00:00'
+[2026-09-21T01:31:17.099+0000] {subprocess.py:63} INFO - Tmp dir root location: 
+ /tmp
+[2026-09-21T01:31:17.100+0000] {subprocess.py:75} INFO - Running command: ['/bin/bash', '-c', 'sleep 5 && echo $((3 * 8))']
+[2026-09-21T01:31:17.125+0000] {subprocess.py:86} INFO - Output:
+[2026-09-21T01:31:22.137+0000] {subprocess.py:93} INFO - 24
+[2026-09-21T01:31:22.138+0000] {subprocess.py:97} INFO - Command exited with return code 0
+[2026-09-21T01:31:22.193+0000] {taskinstance.py:1373} INFO - Marking task as SUCCESS. dag_id=6-XCom, task_id=tarea_1, execution_date=20251106T000000, start_date=20260921T013116, end_date=20260921T013122
+[2026-09-21T01:31:22.255+0000] {local_task_job_runner.py:232} INFO - Task exited with return code 0
+[2026-09-21T01:31:22.328+0000] {taskinstance.py:2674} INFO - 1 downstream tasks scheduled from follow-on schedule check

@@ -1,0 +1,127 @@
+# Despliegue de la aplicación (mlops-assignment / taller001)
+
+Repositorio: https://github.com/Dierickb/mlops-assignment.git
+Puerto de la aplicación (definido en el `Dockerfile`): **8989**
+
+Requisito previo para ambas opciones: estar conectado a la **VPN** de la red donde viven las MV.
+
+MV principal para este despliegue: **10.43.97.103** (usuario `estudiante`, Rocky Linux 9.8, acceso SSH).
+Otras MV disponibles dentro de la misma red (mismo usuario y SO):
+| IP | Usuario | Estudiante
+|---|---|---|
+| 10.43.97.103 | estudiante |Diego|
+| 10.43.97.99 | estudiante | Andrea |
+| 10.43.97.-- | estudiante | Dierikb |
+
+
+---
+
+## Opción 1 — GitHub Actions (self-hosted runner)
+
+Como las MV solo son accesibles por VPN, GitHub Actions **no puede conectarse por SSH desde internet**. La solución es instalar un *runner* propio dentro de la MV: el workflow se ejecuta localmente en la máquina, sin necesitar entrar desde afuera.
+
+### 1. Instalar el runner en la MV
+
+1. En GitHub: **Settings → Actions → Runners → New self-hosted runner**
+2. Elegir **Linux** y seguir los 4 comandos que GitHub genera (descargar, extraer, configurar y ejecutar `./run.sh`). Se ejecutan por SSH dentro de la MV.
+3. Dejarlo corriendo como servicio para que sobreviva a un reinicio:
+   ```
+   sudo ./svc.sh install
+   sudo ./svc.sh start
+   ```
+
+### 2. Verificar antes de usar el workflow (`.github/workflows/deploy.yml`)
+
+El `.yml` tiene 3 valores fijos que deben coincidir con la realidad del repo/MV antes de ejecutarlo:
+
+| Variable en el `.yml` | Valor actual | Verificar que... |
+|---|---|---|
+| `branches: main` | `main` | sea la rama a la que se le hará push |
+| `cd taller001` | `taller001` | esa carpeta exista con ese nombre exacto en el repo |
+| `-p 8989:8989` | `8989` | coincida con el `EXPOSE`/`CMD` del `Dockerfile` vigente |
+
+Si alguno cambió (ej. otra rama, otra carpeta, otro puerto), ajustar el `.yml` antes de hacer push.
+
+### 3. Probarlo
+
+Hacer `git push` a `main`. En la pestaña **Actions** del repo se ve la ejecución. Al finalizar, la app queda disponible en:
+```
+http://10.43.97.103:8989/docs
+http://[IP_de_la_MV_con_VPN_Activa]:8989/docs
+```
+---
+
+## Opción 2 — Comandos manuales por SSH
+
+Para ejecutar directamente en la MV principal (`10.43.97.103`), aunque los mismos pasos aplican a cualquier otra MV dentro de la misma red.
+
+### 1. Conectarse a la MV
+
+```
+ssh estudiante@10.43.97.103
+```
+
+### 2. Clonar o actualizar el repositorio
+
+Primera vez:
+```
+git clone https://github.com/Dierickb/mlops-assignment.git
+cd mlops-assignment/taller001
+```
+
+Si ya existe en la MV:
+```
+cd mlops-assignment
+git pull origin main
+cd taller001
+```
+
+### 3. Verificar Docker (instalar si hace falta, Rocky Linux)
+
+```
+docker --version
+```
+Si no está instalado:
+```
+sudo dnf install -y docker
+sudo systemctl enable --now docker
+```
+
+### 4. Construir y correr el contenedor
+
+```
+sudo docker build -t mlops-taller001 .
+sudo docker run -d -p 8989:8989 --restart unless-stopped --name mlops-api mlops-taller001
+```
+
+### 5. Verificar
+
+```
+sudo docker ps
+```
+
+### 6. Acceder desde el navegador (con VPN activa)
+
+```
+http://10.43.97.103:8989/docs
+```
+
+### 7. Actualizar tras nuevos cambios
+
+```
+git pull
+sudo docker stop mlops-api
+sudo docker rm mlops-api
+sudo docker build -t mlops-taller001 .
+sudo docker run -d -p 8989:8989 --restart unless-stopped --name mlops-api mlops-taller001
+```
+
+---
+
+## Nota sobre el firewall
+
+Si el puerto 8989 no responde desde otra máquina de la red, verificar que esté abierto en la MV:
+```
+sudo firewall-cmd --add-port=8989/tcp --permanent
+sudo firewall-cmd --reload
+```

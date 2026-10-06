@@ -1,0 +1,15 @@
+[2026-09-21T03:02:09.187+0000] {taskinstance.py:1125} INFO - Dependencies all met for dep_context=non-requeueable deps ti=<TaskInstance: 8-mlops_pipeline.evaluacion_modelo manual__2026-09-21T03:02:03.701463+00:00 [queued]>
+[2026-09-21T03:02:09.205+0000] {taskinstance.py:1125} INFO - Dependencies all met for dep_context=requeueable deps ti=<TaskInstance: 8-mlops_pipeline.evaluacion_modelo manual__2026-09-21T03:02:03.701463+00:00 [queued]>
+[2026-09-21T03:02:09.205+0000] {taskinstance.py:1331} INFO - Starting attempt 1 of 2
+[2026-09-21T03:02:09.229+0000] {taskinstance.py:1350} INFO - Executing <Task(PythonOperator): evaluacion_modelo> on 2026-09-21 03:02:03.701463+00:00
+[2026-09-21T03:02:09.240+0000] {standard_task_runner.py:57} INFO - Started process 540 to run task
+[2026-09-21T03:02:09.245+0000] {standard_task_runner.py:84} INFO - Running: ['***', 'tasks', 'run', '8-mlops_pipeline', 'evaluacion_modelo', 'manual__2026-09-21T03:02:03.701463+00:00', '--job-id', '4397', '--raw', '--subdir', 'DAGS_FOLDER/8_mlops_pipeline.py', '--cfg-path', '/tmp/tmpl85wr4p_']
+[2026-09-21T03:02:09.246+0000] {standard_task_runner.py:85} INFO - Job 4397: Subtask evaluacion_modelo
+[2026-09-21T03:02:09.353+0000] {task_command.py:410} INFO - Running <TaskInstance: 8-mlops_pipeline.evaluacion_modelo manual__2026-09-21T03:02:03.701463+00:00 [running]> on host 07ebe77922f8
+[2026-09-21T03:02:09.514+0000] {taskinstance.py:1570} INFO - Exporting env vars: AIRFLOW_CTX_DAG_OWNER='***' AIRFLOW_CTX_DAG_ID='8-mlops_pipeline' AIRFLOW_CTX_TASK_ID='evaluacion_modelo' AIRFLOW_CTX_EXECUTION_DATE='2026-09-21T03:02:03.701463+00:00' AIRFLOW_CTX_TRY_NUMBER='1' AIRFLOW_CTX_DAG_RUN_ID='manual__2026-09-21T03:02:03.701463+00:00'
+[2026-09-21T03:02:09.516+0000] {logging_mixin.py:149} INFO - Evaluando precisión del modelo...
+[2026-09-21T03:02:09.517+0000] {logging_mixin.py:149} INFO - Accuracy del modelo: 94.0% - Aprobado para producción.
+[2026-09-21T03:02:09.518+0000] {python.py:183} INFO - Done. Returned value was: None
+[2026-09-21T03:02:09.538+0000] {taskinstance.py:1373} INFO - Marking task as SUCCESS. dag_id=8-mlops_pipeline, task_id=evaluacion_modelo, execution_date=20260921T030203, start_date=20260921T030209, end_date=20260921T030209
+[2026-09-21T03:02:09.584+0000] {local_task_job_runner.py:232} INFO - Task exited with return code 0
+[2026-09-21T03:02:09.627+0000] {taskinstance.py:2674} INFO - 1 downstream tasks scheduled from follow-on schedule check

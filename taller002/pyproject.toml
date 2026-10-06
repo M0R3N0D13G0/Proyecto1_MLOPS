@@ -1,0 +1,27 @@
+[project]
+name = "taller002"
+version = "0.1.0"
+description = "Add your description here"
+readme = "README.md"
+authors = [
+    { name = "Dierickb", email = "dierickbro@gmail.com" }
+]
+requires-python = ">=3.9"
+dependencies = [
+    "fastapi>=0.128.8",
+    "numpy>=2.0.2",
+    "pandas>=2.3.3",
+    "uvicorn>=0.39.0",
+]
+
+[project.scripts]
+taller002 = "taller002:main"
+
+[build-system]
+requires = ["uv_build>=0.12.10,<0.13.0"]
+build-backend = "uv_build"
+
+[tool.uv.workspace]
+members = [
+    "ml_jupyter",
+]

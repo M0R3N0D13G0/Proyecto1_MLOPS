@@ -1,0 +1,28 @@
+name: Deploy to VM
+
+on:
+  push:
+    branches:
+      - main
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Deploy via SSH
+        uses: appleboy/ssh-action@v1.0.0
+        with:
+          host: ${{ secrets.VM_HOST }}
+          username: ${{ secrets.VM_USER }}
+          key: ${{ secrets.VM_SSH_KEY }}
+          script: |
+            cd ~/mlops-assignment
+            git pull origin main
+            cd taller001
+            docker stop mlops-api || true
+            docker rm mlops-api || true
+            docker build -t mlops-taller001 .
+            docker run -d -p 8989:8989 --restart unless-stopped --name mlops-api mlops-taller001

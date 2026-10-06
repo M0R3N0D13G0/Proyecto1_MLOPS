@@ -1,0 +1,18 @@
+[2026-09-20T22:03:59.085+0000] {taskinstance.py:1125} INFO - Dependencies all met for dep_context=non-requeueable deps ti=<TaskInstance: 2-bashoperator.hello_with_bash scheduled__2024-06-01T00:00:00+00:00 [queued]>
+[2026-09-20T22:03:59.244+0000] {taskinstance.py:1125} INFO - Dependencies all met for dep_context=requeueable deps ti=<TaskInstance: 2-bashoperator.hello_with_bash scheduled__2024-06-01T00:00:00+00:00 [queued]>
+[2026-09-20T22:03:59.245+0000] {taskinstance.py:1331} INFO - Starting attempt 1 of 1
+[2026-09-20T22:03:59.294+0000] {taskinstance.py:1350} INFO - Executing <Task(BashOperator): hello_with_bash> on 2024-06-01 00:00:00+00:00
+[2026-09-20T22:03:59.326+0000] {standard_task_runner.py:57} INFO - Started process 2253 to run task
+[2026-09-20T22:03:59.354+0000] {standard_task_runner.py:84} INFO - Running: ['***', 'tasks', 'run', '2-bashoperator', 'hello_with_bash', 'scheduled__2024-06-01T00:00:00+00:00', '--job-id', '664', '--raw', '--subdir', 'DAGS_FOLDER/2_bash_operator.py', '--cfg-path', '/tmp/tmpse3z8_0a']
+[2026-09-20T22:03:59.355+0000] {standard_task_runner.py:85} INFO - Job 664: Subtask hello_with_bash
+[2026-09-20T22:03:59.551+0000] {task_command.py:410} INFO - Running <TaskInstance: 2-bashoperator.hello_with_bash scheduled__2024-06-01T00:00:00+00:00 [running]> on host f248220f3539
+[2026-09-20T22:03:59.954+0000] {taskinstance.py:1570} INFO - Exporting env vars: AIRFLOW_CTX_DAG_OWNER='***' AIRFLOW_CTX_DAG_ID='2-bashoperator' AIRFLOW_CTX_TASK_ID='hello_with_bash' AIRFLOW_CTX_EXECUTION_DATE='2024-06-01T00:00:00+00:00' AIRFLOW_CTX_TRY_NUMBER='1' AIRFLOW_CTX_DAG_RUN_ID='scheduled__2024-06-01T00:00:00+00:00'
+[2026-09-20T22:03:59.956+0000] {subprocess.py:63} INFO - Tmp dir root location: 
+ /tmp
+[2026-09-20T22:03:59.959+0000] {subprocess.py:75} INFO - Running command: ['/bin/bash', '-c', "echo 'Hello MLOPS_PUJ'"]
+[2026-09-20T22:04:00.053+0000] {subprocess.py:86} INFO - Output:
+[2026-09-20T22:04:00.071+0000] {subprocess.py:93} INFO - Hello MLOPS_PUJ
+[2026-09-20T22:04:00.071+0000] {subprocess.py:97} INFO - Command exited with return code 0
+[2026-09-20T22:04:00.268+0000] {taskinstance.py:1373} INFO - Marking task as SUCCESS. dag_id=2-bashoperator, task_id=hello_with_bash, execution_date=20240601T000000, start_date=20260920T220359, end_date=20260920T220400
+[2026-09-20T22:04:00.382+0000] {local_task_job_runner.py:232} INFO - Task exited with return code 0
+[2026-09-20T22:04:00.453+0000] {taskinstance.py:2674} INFO - 0 downstream tasks scheduled from follow-on schedule check

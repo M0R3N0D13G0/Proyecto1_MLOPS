@@ -1,0 +1,29 @@
+services:
+
+  fastapi:
+    build:
+      context: ./ml_api
+    container_name: ml_services
+    ports:
+      - "8000:8000"
+    volumes:
+      - ./ml_api/app:/app/app
+      - ./models:/models
+    environment:
+      - MODELS_DIR=/models
+    depends_on:
+      - jupyter
+
+  jupyter:
+    build:
+      context: ./ml_jupyter
+    container_name: jupyter_notebook
+    ports:
+      - "8888:8888"
+    volumes:
+      - ./ml_jupyter/train_model.ipynb:/app/notebooks/train_model.ipynb
+      - ./ml_jupyter/train_model_penguins.ipynb:/app/notebooks/train_model_penguins.ipynb
+      - ./models:/models
+    environment:
+      - MODELS_DIR=/models
+      - JUPYTER_TOKEN=devtoken

@@ -1,0 +1,179 @@
+# docker-compose.yaml de taller004: MLflow (metadata en Postgres, artefactos en MinIO)
+# + Postgres de datos (separado) + JupyterLab + API de inferencia.
+# Arquitectura y decisiones: ver README.md. Pendientes: ver NOTAS_PENDIENTES.md.
+
+services:
+  # ---------------------------------------------------------------------------
+  # Base de datos DEDICADA a la metadata de MLflow (experimentos, runs, params,
+  # metricas, Model Registry). No guarda datos de negocio.
+  # ---------------------------------------------------------------------------
+  postgres-mlflow:
+    image: postgres:16
+    container_name: taller004_postgres_mlflow
+    environment:
+      POSTGRES_USER: ${MLFLOW_DB_USER}
+      POSTGRES_PASSWORD: ${MLFLOW_DB_PASSWORD}
+      POSTGRES_DB: ${MLFLOW_DB_NAME}
+    volumes:
+      - mlflow-db-volume:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U ${MLFLOW_DB_USER} -d ${MLFLOW_DB_NAME}"]
+      interval: 10s
+      retries: 5
+      start_period: 5s
+    restart: always
+
+  # ---------------------------------------------------------------------------
+  # Base de datos de DATOS (crudos en `raw`, procesados en `processed`).
+  # Distinta a la de MLflow, como pide el enunciado (mismo criterio que taller003
+  # y proyecto1: metadata de la herramienta separada de los datos).
+  # ---------------------------------------------------------------------------
+  postgres-data:
+    image: postgres:16
+    container_name: taller004_postgres_data
+    environment:
+      POSTGRES_USER: ${DATA_DB_USER}
+      POSTGRES_PASSWORD: ${DATA_DB_PASSWORD}
+      POSTGRES_DB: ${DATA_DB_NAME}
+    volumes:
+      - data-db-volume:/var/lib/postgresql/data
+      # Scripts que corren UNA vez, al crear el volumen (crean esquemas y cargan el CSV crudo).
+      - ./postgres-init:/docker-entrypoint-initdb.d:ro
+      # CSV fuente que lee el COPY de postgres-init/01-raw.sql.
+      - ./data:/data:ro
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U ${DATA_DB_USER} -d ${DATA_DB_NAME}"]
+      interval: 10s
+      retries: 5
+      start_period: 5s
+    restart: always
+
+  # ---------------------------------------------------------------------------
+  # MinIO DEDICADO a MLflow (artifact store). Se usa Silo (fork de MinIO) por el
+  # mismo motivo que en proyecto1: MinIO dejo de publicar imagenes. Tag fijo.
+  # ---------------------------------------------------------------------------
+  minio:
+    image: docker.io/pgsty/silo:RELEASE.2026-09-16T00-00-00Z
+    container_name: taller004_minio
+    command: server /data --console-address ":9001"
+    environment:
+      MINIO_ROOT_USER: ${MINIO_ROOT_USER}
+      MINIO_ROOT_PASSWORD: ${MINIO_ROOT_PASSWORD}
+    ports:
+      - "${MINIO_API_HOST_PORT:-9000}:9000"
+      - "${MINIO_CONSOLE_HOST_PORT:-9001}:9001"
+    volumes:
+      - minio-data-volume:/data
+    healthcheck:
+      test: ["CMD", "mc", "ready", "local"]
+      interval: 10s
+      retries: 5
+      start_period: 5s
+    restart: always
+
+  minio-init:
+    image: docker.io/pgsty/mc:RELEASE.2026-09-16T00-00-00Z
+    container_name: taller004_minio_init
+    depends_on:
+      minio:
+        condition: service_healthy
+    entrypoint: >
+      /bin/sh -c "
+      mc alias set local http://minio:9000 ${MINIO_ROOT_USER} ${MINIO_ROOT_PASSWORD} &&
+      mc mb --ignore-existing local/${MLFLOW_BUCKET}
+      "
+    restart: "no"
+
+  # ---------------------------------------------------------------------------
+  # Servidor de MLflow. Con --serve-artifacts el servidor hace de proxy hacia
+  # MinIO: Jupyter y la API solo necesitan MLFLOW_TRACKING_URI, no credenciales S3.
+  # ---------------------------------------------------------------------------
+  mlflow:
+    build:
+      context: ./mlflow
+    container_name: taller004_mlflow
+    # +psycopg2 explicito: SQLAlchemy 2.1 cambio el driver por defecto de postgresql:// a
+    # psycopg (v3), que no esta instalado; sin esto el servidor no arranca.
+    command: >
+      uv run --no-sync mlflow server
+      --backend-store-uri postgresql+psycopg2://${MLFLOW_DB_USER}:${MLFLOW_DB_PASSWORD}@postgres-mlflow:5432/${MLFLOW_DB_NAME}
+      --artifacts-destination s3://${MLFLOW_BUCKET}
+      --serve-artifacts
+      --host 0.0.0.0
+      --port 5000
+      --allowed-hosts "${MLFLOW_ALLOWED_HOSTS}"
+    environment:
+      # Credenciales y endpoint que usa boto3 (dentro del servidor) para hablar con MinIO.
+      MLFLOW_S3_ENDPOINT_URL: http://minio:9000
+      AWS_ACCESS_KEY_ID: ${MINIO_ROOT_USER}
+      AWS_SECRET_ACCESS_KEY: ${MINIO_ROOT_PASSWORD}
+    ports:
+      - "${MLFLOW_HOST_PORT:-5000}:5000"
+    healthcheck:
+      # La imagen slim no trae curl: se usa Python para pegarle a /health.
+      test: ["CMD", "python", "-c", "import urllib.request; urllib.request.urlopen('http://localhost:5000/health')"]
+      interval: 15s
+      timeout: 5s
+      retries: 10
+      start_period: 20s
+    depends_on:
+      postgres-mlflow:
+        condition: service_healthy
+      minio-init:
+        condition: service_completed_successfully
+    restart: always
+
+  # ---------------------------------------------------------------------------
+  # JupyterLab (instalado con uv). Lee/escribe datos en postgres-data y registra
+  # experimentos y modelos en MLflow.
+  # ---------------------------------------------------------------------------
+  jupyter:
+    build:
+      context: ./jupyter
+    container_name: taller004_jupyter
+    environment:
+      JUPYTER_TOKEN: ${JUPYTER_TOKEN}
+      MLFLOW_TRACKING_URI: http://mlflow:5000
+      DATA_DB_URI: postgresql+psycopg2://${DATA_DB_USER}:${DATA_DB_PASSWORD}@postgres-data:5432/${DATA_DB_NAME}
+      MODEL_NAME: ${MODEL_NAME}
+      MODEL_ALIAS: ${MODEL_ALIAS}
+      # La imagen no trae git: evita el warning de MLflow en cada run.
+      GIT_PYTHON_REFRESH: quiet
+    ports:
+      - "${JUPYTER_HOST_PORT:-8888}:8888"
+    volumes:
+      # Los notebooks se montan: lo que edites en JupyterLab queda en ./jupyter/notebooks.
+      - ./jupyter/notebooks:/app/notebooks
+    depends_on:
+      postgres-data:
+        condition: service_healthy
+      mlflow:
+        condition: service_healthy
+    restart: always
+
+  # ---------------------------------------------------------------------------
+  # API de inferencia: toma el modelo desde el Model Registry de MLflow.
+  # ---------------------------------------------------------------------------
+  api:
+    build:
+      context: ./api
+    container_name: taller004_api
+    # --reload + volumen montado: los cambios en api/app se ven sin reconstruir la imagen.
+    command: ["uv", "run", "--no-sync", "uvicorn", "app.main:app", "--host", "0.0.0.0", "--port", "8000", "--reload"]
+    environment:
+      MLFLOW_TRACKING_URI: http://mlflow:5000
+      MODEL_NAME: ${MODEL_NAME}
+      MODEL_ALIAS: ${MODEL_ALIAS}
+    ports:
+      - "${API_HOST_PORT:-8000}:8000"
+    volumes:
+      - ./api/app:/app/app
+    depends_on:
+      mlflow:
+        condition: service_healthy
+    restart: always
+
+volumes:
+  mlflow-db-volume:
+  data-db-volume:
+  minio-data-volume:

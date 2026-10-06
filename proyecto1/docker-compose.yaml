@@ -1,0 +1,184 @@
+# docker-compose.yaml de proyecto1: Airflow (LocalExecutor) + PostgreSQL (metadatos y datos)
+# + MinIO (modelos) + API de inferencia. Arquitectura y decisiones: ver README.md.
+x-airflow-common:
+  &airflow-common
+  build:
+    context: ./airflow
+  environment:
+    &airflow-common-env
+    AIRFLOW__CORE__EXECUTOR: LocalExecutor
+    AIRFLOW__DATABASE__SQL_ALCHEMY_CONN: postgresql+psycopg2://airflow:airflow@postgres-airflow/airflow
+    AIRFLOW__CORE__FERNET_KEY: ''
+    AIRFLOW__CORE__DAGS_ARE_PAUSED_AT_CREATION: 'true'
+    AIRFLOW__CORE__LOAD_EXAMPLES: 'False'
+    AIRFLOW__API__AUTH_BACKENDS: 'airflow.api.auth.backend.basic_auth,airflow.api.auth.backend.session'
+    AIRFLOW__SCHEDULER__ENABLE_HEALTH_CHECK: 'true'
+    # Misma clave en webserver y scheduler: sin ella la UI da 403 al leer logs de tareas.
+    AIRFLOW__WEBSERVER__SECRET_KEY: ${AIRFLOW_WEBSERVER_SECRET_KEY}
+    MLOPS_DB_URI: postgresql+psycopg2://${POSTGRES_DATA_USER}:${POSTGRES_DATA_PASSWORD}@postgres-data:5432/${POSTGRES_DATA_DB}
+    EXTERNAL_API_BASE_URL: ${EXTERNAL_API_BASE_URL}
+    GRUPO_NUMERO: ${GRUPO_NUMERO}
+    MINIO_ENDPOINT: minio:9000
+    MINIO_ROOT_USER: ${MINIO_ROOT_USER}
+    MINIO_ROOT_PASSWORD: ${MINIO_ROOT_PASSWORD}
+    MINIO_BUCKET: ${MINIO_BUCKET}
+  volumes:
+    - ./dags:/opt/airflow/dags
+    - ./logs:/opt/airflow/logs
+    - ./plugins:/opt/airflow/plugins
+  user: "${AIRFLOW_UID:-50000}:0"
+  depends_on:
+    &airflow-common-depends-on
+    postgres-airflow:
+      condition: service_healthy
+    postgres-data:
+      condition: service_healthy
+
+services:
+  postgres-airflow:
+    image: postgres:13
+    container_name: proyecto1_postgres_airflow
+    environment:
+      POSTGRES_USER: airflow
+      POSTGRES_PASSWORD: airflow
+      POSTGRES_DB: airflow
+    volumes:
+      - airflow-db-volume:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD", "pg_isready", "-U", "airflow"]
+      interval: 10s
+      retries: 5
+      start_period: 5s
+    restart: always
+
+  postgres-data:
+    image: postgres:13
+    container_name: proyecto1_postgres_data
+    environment:
+      POSTGRES_USER: ${POSTGRES_DATA_USER}
+      POSTGRES_PASSWORD: ${POSTGRES_DATA_PASSWORD}
+      POSTGRES_DB: ${POSTGRES_DATA_DB}
+    volumes:
+      - postgres-data-volume:/var/lib/postgresql/data
+      - ./postgres-init:/docker-entrypoint-initdb.d
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U ${POSTGRES_DATA_USER}"]
+      interval: 10s
+      retries: 5
+      start_period: 5s
+    restart: always
+
+  minio:
+    # MinIO dejo de distribuir imagenes: borro minio/minio y minio/mc de Docker Hub y
+    # cerro quay.io/minio (sep-2026). Se usa Silo, fork de MinIO mantenido por PGSTY:
+    # mismo codigo, mismo protocolo S3, mismas variables MINIO_*. Tag fijo, no :latest.
+    image: pgsty/silo:RELEASE.2026-09-16T00-00-00Z
+    container_name: proyecto1_minio
+    command: server /data --console-address ":9001"
+    environment:
+      MINIO_ROOT_USER: ${MINIO_ROOT_USER}
+      MINIO_ROOT_PASSWORD: ${MINIO_ROOT_PASSWORD}
+    ports:
+      - "9000:9000"
+      - "9001:9001"
+    volumes:
+      - minio-data-volume:/data
+    healthcheck:
+      # Las imagenes recientes de MinIO ya no traen curl; `mc ready local` es el healthcheck oficial.
+      test: ["CMD", "mc", "ready", "local"]
+      interval: 10s
+      retries: 5
+      start_period: 5s
+    restart: always
+
+  minio-init:
+    image: pgsty/mc:RELEASE.2026-09-16T00-00-00Z
+    container_name: proyecto1_minio_init
+    depends_on:
+      minio:
+        condition: service_healthy
+    entrypoint: >
+      /bin/sh -c "
+      mc alias set local http://minio:9000 ${MINIO_ROOT_USER} ${MINIO_ROOT_PASSWORD} &&
+      mc mb --ignore-existing local/${MINIO_BUCKET}
+      "
+    restart: "no"
+
+  airflow-init:
+    <<: *airflow-common
+    container_name: proyecto1_airflow_init
+    # Patron oficial de Airflow (igual que taller003): el contenedor corre como root solo
+    # para dar permisos a las carpetas montadas, y delega la inicializacion al /entrypoint
+    # de la imagen, que ejecuta `airflow db upgrade` y crea el usuario con el entorno correcto.
+    # Antes se llamaba `airflow ...` directo como root: fallaba, pero el script terminaba en
+    # `|| true` y salia con codigo 0, ocultando el error. `set -e` + `exec` propagan el fallo.
+    entrypoint: /bin/bash
+    command:
+      - -c
+      - |
+        set -e
+        mkdir -p /opt/airflow/logs /opt/airflow/dags /opt/airflow/plugins
+        chown -R "${AIRFLOW_UID:-50000}:0" /opt/airflow/logs /opt/airflow/dags /opt/airflow/plugins
+        exec /entrypoint airflow version
+    environment:
+      <<: *airflow-common-env
+      _AIRFLOW_DB_UPGRADE: 'true'
+      _AIRFLOW_WWW_USER_CREATE: 'true'
+      _AIRFLOW_WWW_USER_USERNAME: ${_AIRFLOW_WWW_USER_USERNAME:-airflow}
+      _AIRFLOW_WWW_USER_PASSWORD: ${_AIRFLOW_WWW_USER_PASSWORD:-airflow}
+    user: "0:0"
+
+  airflow-webserver:
+    <<: *airflow-common
+    container_name: proyecto1_airflow_webserver
+    command: webserver
+    ports:
+      - "8080:8080"
+    healthcheck:
+      test: ["CMD", "curl", "--fail", "http://localhost:8080/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 5
+      start_period: 30s
+    restart: always
+    depends_on:
+      <<: *airflow-common-depends-on
+      airflow-init:
+        condition: service_completed_successfully
+
+  airflow-scheduler:
+    <<: *airflow-common
+    container_name: proyecto1_airflow_scheduler
+    command: scheduler
+    healthcheck:
+      test: ["CMD", "curl", "--fail", "http://localhost:8974/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 5
+      start_period: 30s
+    restart: always
+    depends_on:
+      <<: *airflow-common-depends-on
+      airflow-init:
+        condition: service_completed_successfully
+
+  inference-api:
+    build:
+      context: ./api
+    container_name: proyecto1_inference_api
+    ports:
+      - "8000:8000"
+    environment:
+      MINIO_ENDPOINT: minio:9000
+      MINIO_ROOT_USER: ${MINIO_ROOT_USER}
+      MINIO_ROOT_PASSWORD: ${MINIO_ROOT_PASSWORD}
+      MINIO_BUCKET: ${MINIO_BUCKET}
+    depends_on:
+      minio-init:
+        condition: service_completed_successfully
+    restart: always
+
+volumes:
+  airflow-db-volume:
+  postgres-data-volume:
+  minio-data-volume:

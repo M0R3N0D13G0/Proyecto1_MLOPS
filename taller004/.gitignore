@@ -1,0 +1,9 @@
+.venv/
+__pycache__/
+*.pyc
+.ipynb_checkpoints/
+# Credenciales locales: se copian desde .env.example
+.env
+# Por si se corre MLflow fuera de Docker sin servidor
+mlruns/
+mlartifacts/
